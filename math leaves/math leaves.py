@@ -12,7 +12,6 @@ score = 0
 userIn = "0"
 lastReset = 0
 resetRate = 500
-scroll = 0
 
 # game objects & visual elements
 background = pygame.image.load("images/math leaves bg.png")
@@ -20,6 +19,19 @@ background_rect = background.get_rect()
 
 startButton = pygame.image.load("images/start!.png")
 startButton_rect = startButton.get_rect()
+
+infoButton = pygame.image.load("images/info button graphic.png")
+infoButton_rect = infoButton.get_rect()
+infoButton = pygame.transform.scale(infoButton,((infoButton_rect.width)//2.3,(infoButton_rect.height)//2.3))
+infoButton_rect = infoButton.get_rect()
+
+instruct = pygame.image.load("images/instructions page.png")
+instruct_rect = instruct.get_rect()
+
+exitButton = pygame.image.load("images/exit button.png")
+exitButton_rect = exitButton.get_rect()
+exitButton = pygame.transform.scale(exitButton,((exitButton_rect.width)//3.5,(exitButton_rect.height)//3.5))
+exitButton_rect = exitButton.get_rect()
 
 cloud1 = pygame.image.load("images/cloud1.png")
 cloud1_rect = cloud1.get_rect()
@@ -42,8 +54,9 @@ leaves = pygame.transform.scale(leaves, ((leaves_rect.width)//1.5, (leaves_rect.
 leaves_rect = leaves.get_rect()
 
 # audio objects
-pygame.mixer.music.load("audio/bg music.mp3")
-startScreenMusic = pygame.mixer.Sound("audio/start screen music.mp3")
+pygame.mixer.music.load("audio/start screen music.mp3")
+pygame.mixer.music.set_volume(0.65) # lower volume of music
+pygame.mixer.music.play(-1)
 
 # surface initialization
 surf_width, surf_height = 600,750
@@ -60,10 +73,17 @@ leaf_group = pygame.sprite.Group()
 running = True
 startScreen = True
 alive = False
+endScreen = False
+infoScreen = False
 
 # display variables
+scroll = 0
 startW = (surf_width-startButton_rect.width)//2
 startH = (surf_height-startButton_rect.height+title_rect.height)//2 + 50
+infoW = surf_width-infoButton_rect.width-25
+infoH = 25
+exitW = surf_width-exitButton_rect.width-5
+exitH = 5
  
 while running:
     for event in pygame.event.get():
@@ -99,12 +119,21 @@ while running:
                     # if the start button is clicked, start game, stop start screen
                     alive = True
                     startScreen = False
-                    # stop start screen music, start game music
-                    startScreenMusic.stop()
+                    # unload start screen music, start game music
+                    pygame.mixer.music.unload()
+                    pygame.mixer.music.load("audio/bg music.mp3")
                     pygame.mixer.music.play(-1)
+                if infoButton_rect.collidepoint(pos):
+                    # stop start screen, start info screen
+                    infoScreen = True
+                    startScreen = False
+                if exitButton_rect.collidepoint(pos):
+                    # stop info screen, restart start screen
+                    startScreen = True
+                    infoScreen = False
+                    
 
     if startScreen: # start screen display
-        startScreenMusic.play(-1)
         # scrolling screen
         surface.blit(background,(0,scroll))
         surface.blit(background,(0,scroll-surf_height))
@@ -113,14 +142,27 @@ while running:
         surface.blit(title,((surf_width-title_rect.width)//2,(surf_height-title_rect.height-150)//2))
         # start button blit
         surface.blit(startButton,(startW,startH))
-        # update start button rect after blit
+        # update start button rect
         startButton_rect.x = startW
         startButton_rect.y = startH
+        # info button blit
+        surface.blit(infoButton,(infoW,infoH))
+        # update info button rect
+        infoButton_rect.x = infoW
+        infoButton_rect.y = infoH
         scroll+=0.5
     
         if scroll>surf_height: # if the bottom background image is out of view, reset to scroll to 0
             scroll=0
-        
+    
+    if infoScreen:
+        surface.blit(instruct,(0,0))
+        # exit button blit
+        surface.blit(exitButton,(exitW,exitH))
+        # update exit button rect
+        exitButton_rect.x = exitW
+        exitButton_rect.y = exitH
+
     if alive:
         #deciding the numbers and operation for each leaf 
         opNum = random.randint(0,3)
@@ -187,17 +229,20 @@ while running:
         #if leaf falls into leaf pile, game over 
         for leaf in leaf_group:
             if leaf.rect.y > surf_height - (leaves_rect.height)//2:
-                leaf.sound.play()
+                endScreen = True
+
+        if endScreen:
+            leaf.sound.play()
+            leaf_group.remove(leaf)
+
+            for leaf in leaf_group:
                 leaf_group.remove(leaf)
 
-                for leaf in leaf_group:
-                    leaf_group.remove(leaf)
-
-                alive = False
-                surface.fill("black")
-                surface.blit(gameover,(((surf_width)-gameover_rect.width)//2,(surf_height)//2-gameover_rect.height))
-                surface.blit(scoreLabel,(((surf_width)-scoreLabel_rect.width)//2,((surf_height)//2)+10))
-                pygame.mixer.music.stop()
+            alive = False
+            surface.fill("black")
+            surface.blit(gameover,(((surf_width)-gameover_rect.width)//2,(surf_height)//2-gameover_rect.height))
+            surface.blit(scoreLabel,(((surf_width)-scoreLabel_rect.width)//2,((surf_height)//2)+10))
+            pygame.mixer.music.stop()
         
         #update game display
         leaf_group.draw(surface)
