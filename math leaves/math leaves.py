@@ -141,6 +141,8 @@ while running:
                     # stop end screen, restart game
                     alive = True
                     endScreen = False
+                    score = 0
+                    scoreLabel, scoreLabel_rect = font.render("Score: "+str(score), "seashell", size=50)
                     
 
     if startScreen: # start screen display
