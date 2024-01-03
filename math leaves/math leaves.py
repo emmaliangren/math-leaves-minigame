@@ -143,6 +143,9 @@ while running:
                     endScreen = False
                     score = 0
                     scoreLabel, scoreLabel_rect = font.render("Score: "+str(score), "seashell", size=50)
+                    pygame.mixer.music.unload()
+                    pygame.mixer.music.load("audio/bg music.mp3")
+                    pygame.mixer.music.play(-1)
                     
 
     if startScreen: # start screen display
@@ -260,10 +263,10 @@ while running:
             pygame.draw.rect(surface,"orange",((surf_width-gameover_rect.width-25)//2,(surf_height-gameover_rect.height-220)//2-22,gameover_rect.width+25,gameover_rect.height+scoreLabel_rect.height+35))
             surface.blit(gameover,(((surf_width)-gameover_rect.width)//2,(surf_height-gameover_rect.height-220)//2-10))
             surface.blit(scoreLabel,(((surf_width)-scoreLabel_rect.width)//2,(surf_height-gameover_rect.height-220)//2+gameover_rect.height))
-            surface.blit(restart,((surf_width-restart_rect.width)//2,315))
+            surface.blit(restart,((surf_width-restart_rect.width)//2,450))
             # update restart button coordinates
             restart_rect.x = (surf_width-restart_rect.width)//2
-            restart_rect.y = 315
+            restart_rect.y = 450
             pygame.mixer.music.stop()
 
     pygame.display.update()
