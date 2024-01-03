@@ -46,12 +46,18 @@ cloud2_rect=cloud2.get_rect()
 font = pygame.freetype.Font("fonts/Poppins-Medium.ttf")
 title, title_rect = font.render("Math Leaves", "papayawhip", size=80)
 scoreLabel, scoreLabel_rect = font.render("Score: "+str(score), "seashell", size=50)
-gameover, gameover_rect = font.render("Game Over", "red", size=75)
+gameover, gameover_rect = font.render("Game Over", (212, 24, 24), size=75)
 
 leaves = pygame.image.load("images/leaf pile.png")
 leaves_rect = leaves.get_rect()
 leaves = pygame.transform.scale(leaves, ((leaves_rect.width)//1.5, (leaves_rect.height)//1.5))
 leaves_rect = leaves.get_rect()
+
+endBKG = pygame.image.load("images/end screen.png")
+endBKG_rect = endBKG.get_rect()
+
+restart = pygame.image.load("images/restart button.png")
+restart_rect = restart.get_rect()
 
 # audio objects
 pygame.mixer.music.load("audio/start screen music.mp3")
@@ -131,6 +137,10 @@ while running:
                     # stop info screen, restart start screen
                     startScreen = True
                     infoScreen = False
+                if restart_rect.collidepoint(pos):
+                    # stop end screen, restart game
+                    alive = True
+                    endScreen = False
                     
 
     if startScreen: # start screen display
@@ -229,24 +239,30 @@ while running:
         #if leaf falls into leaf pile, game over 
         for leaf in leaf_group:
             if leaf.rect.y > surf_height - (leaves_rect.height)//2:
-                endScreen = True
-
-        if endScreen:
-            leaf.sound.play()
-            leaf_group.remove(leaf)
-
-            for leaf in leaf_group:
+                leaf.sound.play()
                 leaf_group.remove(leaf)
 
-            alive = False
-            surface.fill("black")
-            surface.blit(gameover,(((surf_width)-gameover_rect.width)//2,(surf_height)//2-gameover_rect.height))
-            surface.blit(scoreLabel,(((surf_width)-scoreLabel_rect.width)//2,((surf_height)//2)+10))
-            pygame.mixer.music.stop()
-        
+                for leaf in leaf_group:
+                    leaf_group.remove(leaf)
+                
+                endScreen = True
+                alive = False
+
         #update game display
         leaf_group.draw(surface)
         leaf_group.update()
+    
+    if endScreen:
+            # end screen display, game over text and restart button blit
+            surface.blit(endBKG,(0,0))
+            pygame.draw.rect(surface,"orange",((surf_width-gameover_rect.width-25)//2,(surf_height-gameover_rect.height-220)//2-22,gameover_rect.width+25,gameover_rect.height+scoreLabel_rect.height+35))
+            surface.blit(gameover,(((surf_width)-gameover_rect.width)//2,(surf_height-gameover_rect.height-220)//2-10))
+            surface.blit(scoreLabel,(((surf_width)-scoreLabel_rect.width)//2,(surf_height-gameover_rect.height-220)//2+gameover_rect.height))
+            surface.blit(restart,((surf_width-restart_rect.width)//2,315))
+            # update restart button coordinates
+            restart_rect.x = (surf_width-restart_rect.width)//2
+            restart_rect.y = 315
+            pygame.mixer.music.stop()
 
     pygame.display.update()
 
