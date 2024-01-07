@@ -4,14 +4,16 @@ import leaf as l
 pygame.init()
 
 # game variables
-spawnRate = 3000
+spawnRate = 2900
 lastSpawn = 0
 operation = ["+","x","÷","-"]
 lim = 15
 score = 0
 userIn = "0"
 lastReset = 0
-resetRate = 500
+resetRate = 3000 # answer resets every 3 seconds (enough time for typing in a negative two digit number1)
+delay = 10
+ansValid = False
 
 # game objects & visual elements
 background = pygame.image.load("images/math leaves bg.png")
@@ -116,6 +118,8 @@ while running:
                 userIn+="8"
             if event.key == pygame.K_9 or event.key == pygame.K_KP9:
                 userIn+="9"
+            if event.key == pygame.K_MINUS or event.key == pygame.K_KP_MINUS:
+                userIn+="-"
             if event.key == pygame.K_DELETE:
                 userIn=userIn.rstrip(userIn[-1])
         elif event.type == pygame.MOUSEBUTTONDOWN:
@@ -165,6 +169,7 @@ while running:
         # update info button rect
         infoButton_rect.x = infoW
         infoButton_rect.y = infoH
+        pygame.time.delay(3)
         scroll+=0.5
     
         if scroll>surf_height: # if the bottom background image is out of view, reset to scroll to 0
@@ -218,17 +223,48 @@ while running:
         
         # if user correctly inputs answer of leaf, remove leaf
         for leaf in leaf_group:
-            if int(userIn)==leaf.ans:
+            # if the answer was inputted during delay before input reset, validate
+            idx = 0
+            for char in userIn: 
+                # need to avoid doing int("3-") case (int conversion of number and then the negative sign)
+                if (idx+1<len(userIn) and idx+2<len(userIn)): # 3 digit input handling
+                    if "-" not in userIn[idx:idx+3]: 
+                        if int(char)==leaf.ans or int(userIn[idx:idx+2])==leaf.ans or int(userIn[idx:idx+3])==leaf.ans:
+                            ansValid = True
+                    if char=='-' and userIn[idx+1]!='-' and userIn[idx+2]!='-': # negative sign then two numbers case
+                        if int(userIn[idx:idx+2])==leaf.ans or int(userIn[idx:idx+3])==leaf.ans:
+                            ansValid = True
+                    if char=='-' and userIn[idx+1]!='-' and userIn[idx+2]=='-': # negative sign, number, negative sign case
+                        if int(userIn[idx:idx+2])==leaf.ans:
+                            ansValid = True
+                elif idx+1<len(userIn): 
+                    if "-" not in userIn[idx:idx+2]:
+                        if int(char)==leaf.ans or int(userIn[idx:idx+2])==leaf.ans:
+                            ansValid = True
+                    if char=='-' and userIn[idx+1]!='-': # negative sign, number, negative sign case
+                        if int(userIn[idx:idx+2])==leaf.ans:
+                            ansValid = True
+                else: # one digit input handling 
+                    if char!='-':
+                        if int(char)==leaf.ans:
+                            ansValid = True
+                idx+=1
+            
+            if ansValid:
                 leaf_group.remove(leaf)
                 score+=1
                 userIn="0"
                 scoreLabel, scoreLabel_rect = font.render("Score: "+str(score), "seashell", size=50)
+                ansValid=False
 
         # slightly delay resetting of user input to allow for double digit input
         timeReset = pygame.time.get_ticks()
         if timeReset - lastReset > resetRate:
             lastReset=timeReset
-            userIn="0"
+            # to prevent user having to retype input
+            # since the longest possible partly typed input is 2 characters (negative double digit)
+            temp=userIn
+            userIn=temp[len(temp)-2:len(temp)]
 
         # background and bottom of display
         surface.fill("aliceblue")
@@ -244,6 +280,7 @@ while running:
         #if leaf falls into leaf pile, game over 
         for leaf in leaf_group:
             if leaf.rect.y > surf_height - (leaves_rect.height)//2:
+                pygame.mixer.music.stop()
                 leaf.sound.play()
                 leaf_group.remove(leaf)
 
@@ -252,6 +289,9 @@ while running:
                 
                 endScreen = True
                 alive = False
+
+        if delay>0:
+            pygame.time.delay(delay)
 
         #update game display
         leaf_group.draw(surface)
@@ -267,7 +307,6 @@ while running:
             # update restart button coordinates
             restart_rect.x = (surf_width-restart_rect.width)//2
             restart_rect.y = 450
-            pygame.mixer.music.stop()
 
     pygame.display.update()
 
