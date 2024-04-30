@@ -7,13 +7,9 @@ them disappear as the user correctly inputs the answers.
 
 ## Getting Started
 
-### Dependencies
-
-Pygame (the module this game was developed with) requires Python, preferably the most recent version. 
-
 ### Executing program
 
-Run the program at the 'math leaves' file depth: math-leaves-minigame/math leaves
+Run the program at the 'math leaves' file depth: `math-leaves-minigame/math leaves` with the command `python3 math leaves.py`
 
 ## Limitations & Possible Improvements
 
